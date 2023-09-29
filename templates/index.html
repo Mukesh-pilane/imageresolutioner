@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Single File Upload with Preview and Download</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        form {
+            text-align: center;
+        }
+
+        /* Updated style for file input */
+        #file-input {
+            position: absolute;
+            top: -9999px;
+        }
+
+        label {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #upload-button {
+            display: none;
+        }
+
+        #uploaded-image {
+            display: block;
+            max-width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Single File Upload with Preview and Download</h1>
+        <form id="upload-form" action="/upload" method="post" enctype="multipart/form-data">
+            <!-- Updated file input style to position off-screen -->
+            <input type="file" id="file-input" name="file" accept="image/*">
+            <label for="file-input">Choose Image</label>
+            <input type="button" id="upload-button" value="Upload">
+        </form>
+        <!-- Display the uploaded image -->
+        <img id="uploaded-image" src="" alt="Uploaded Image">
+        <!-- Download button -->
+        <button id="download-button" style="display: none;">Download Image</button>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('file-input');
+        const uploadedImage = document.getElementById('uploaded-image');
+        const uploadButton = document.getElementById('upload-button');
+        const downloadButton = document.getElementById('download-button');
+        const uploadForm = document.getElementById('upload-form');
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                // Display the selected image immediately
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImage.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+
+                // Hide the file input (off-screen), show the "Upload" button
+                fileInput.style.position = 'absolute';
+                fileInput.style.top = '-9999px';
+                uploadButton.style.display = 'block';
+                downloadButton.style.display = 'none'; // Hide download button
+            }
+        });
+
+        uploadButton.addEventListener('click', () => {
+            // Submit the form to upload the file
+            const formData = new FormData(uploadForm);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData,
+            })
+            .then((response) => {
+                if (response.ok) {
+                    console.log('File uploaded successfully');
+                    // Hide the "Upload" button and show the "Download" button after successful upload
+                    uploadButton.style.display = 'none';
+                    downloadButton.style.display = 'block';
+                } else {
+                    console.error('File upload error');
+                }
+            })
+            .catch((error) => {
+                console.error('File upload error:', error);
+            });
+        });
+
+        downloadButton.addEventListener('click', () => {
+            // Trigger the download of the uploaded image
+            const downloadLink = document.createElement('a');
+            downloadLink.href = uploadedImage.src;
+            downloadLink.download = 'uploaded_image.jpg';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            document.body.removeChild(downloadLink);
+        });
+    </script>
+</body>
+</html>
